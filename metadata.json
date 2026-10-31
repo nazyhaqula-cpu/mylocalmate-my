@@ -1,0 +1,8 @@
+{
+  "name": "MyLocal Mate",
+  "description": "Integrated local discovery and travel companion platform with AI assistance, interactive maps, trip planning, transportation tutorials, translation, and user accounts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
