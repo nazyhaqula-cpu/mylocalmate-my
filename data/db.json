@@ -33,6 +33,72 @@
       "salt": "57c1740223034f19e7108e2a80545643",
       "passwordHash": "6c7f820f633dacea49b763b10c4bf23e22ba3f5285ec47d1d7a6f9b82e881d7d",
       "isVerified": true
+    },
+    {
+      "id": "user-3b0620b3-6802-48fc-9f83-f702de786614",
+      "name": "Siti Aisyah",
+      "email": "siti.aisyah@malaysia.my",
+      "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Siti%20Aisyah",
+      "preferredLanguage": "Malay",
+      "travelInterests": [
+        "Food & Street Stalls",
+        "Culture & Heritage"
+      ],
+      "budgetPreference": "Moderate",
+      "createdAt": "2026-10-31T11:43:16.559Z",
+      "salt": "1e4b5dc2fa97b05d48de09888474f505",
+      "passwordHash": "efc2ac10775038f517cd0a6213ee70fd271c7f6938bc837eb691bc46abfe2078",
+      "isVerified": true,
+      "authProvider": "email"
+    },
+    {
+      "id": "user-4c5e8bdc-3045-4fe3-ad5a-dfe79217796f",
+      "name": "Nazyha Qula",
+      "email": "nazyhaqula@gmail.com",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80",
+      "preferredLanguage": "English",
+      "travelInterests": [
+        "Food & Street Stalls",
+        "Culture & Heritage",
+        "Public Transit"
+      ],
+      "budgetPreference": "Moderate",
+      "createdAt": "2026-10-31T11:43:36.278Z",
+      "isVerified": true,
+      "authProvider": "google"
+    },
+    {
+      "id": "user-2414419f-495d-4ea4-a3c0-2dad1ce78c05",
+      "name": "Nazyha Qula",
+      "email": "nazyha.qula@facebook.com",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
+      "preferredLanguage": "English",
+      "travelInterests": [
+        "Food & Street Stalls",
+        "Culture & Heritage",
+        "Public Transit"
+      ],
+      "budgetPreference": "Moderate",
+      "createdAt": "2026-10-31T11:43:39.970Z",
+      "isVerified": true,
+      "authProvider": "facebook"
+    },
+    {
+      "id": "user-9bf0235c-512e-4270-8d80-bb9ba4fb99a0",
+      "name": "Aiman Hakim",
+      "email": "aiman.hakim@malaysia.my",
+      "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Aiman%20Hakim",
+      "preferredLanguage": "English",
+      "travelInterests": [
+        "Food & Street Stalls",
+        "Culture & Heritage"
+      ],
+      "budgetPreference": "Moderate",
+      "createdAt": "2026-10-31T11:43:46.180Z",
+      "salt": "45c75bddc71350ef4d74493d2037f1c5",
+      "passwordHash": "242e14ce8602f91c102e707513946d132dcff80848a41749bf115e5c43530c7b",
+      "isVerified": true,
+      "authProvider": "email"
     }
   ],
   "destinations": [
@@ -671,6 +737,11 @@
     "demo-token-123": "demo-user",
     "token-43857683-5d62-4e73-a75d-3163fff247c3": "demo-user",
     "token-6f881d88-f4b2-420c-b983-672a35f18ecd": "user-a7852432-3c43-4dad-9060-53567120656e",
-    "token-4b7e585c-cae4-4795-acbc-d8ccbf7116e9": "user-a7852432-3c43-4dad-9060-53567120656e"
+    "token-4b7e585c-cae4-4795-acbc-d8ccbf7116e9": "user-a7852432-3c43-4dad-9060-53567120656e",
+    "token-967f8f66-bbe3-4530-81ae-b8fc977be3f4": "user-3b0620b3-6802-48fc-9f83-f702de786614",
+    "token-690c2155-facb-4445-9eab-287558b6bc1d": "user-3b0620b3-6802-48fc-9f83-f702de786614",
+    "token-bcc385b3-3028-44b3-a367-5d9d19b6caff": "user-4c5e8bdc-3045-4fe3-ad5a-dfe79217796f",
+    "token-aa568441-ed51-4b6c-829a-1addf9e5fa68": "user-2414419f-495d-4ea4-a3c0-2dad1ce78c05",
+    "token-b867063e-9230-42ea-a780-1b2f0cd05056": "user-9bf0235c-512e-4270-8d80-bb9ba4fb99a0"
   }
 }

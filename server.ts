@@ -198,8 +198,11 @@ function getAuthUser(req: Request): User | null {
 // ----------------------------------------------------
 // Auth Routes with Email Verification & Guest Support
 // ----------------------------------------------------
+// Auth Routes with Mandatory Verification & Social Logins (Google/Facebook)
+// ----------------------------------------------------
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// 1. Email/Password Registration (Requires Email Verification)
 app.post('/api/auth/register', (req: Request, res: Response) => {
   const { name, email, password, confirmPassword, preferredLanguage } = req.body;
   if (!email || !password || !name) {
@@ -239,26 +242,25 @@ app.post('/api/auth/register', (req: Request, res: Response) => {
     createdAt: new Date().toISOString(),
     salt,
     passwordHash,
-    isVerified: false,
+    isVerified: false, // Mandatory verification for email/password
     verificationCode,
+    authProvider: 'email' as const,
   };
 
   db.users.push(newUser);
-
-  const token = 'token-' + crypto.randomUUID();
-  activeSessions.set(token, newUser.id);
-  if (!db.sessions) db.sessions = {};
-  db.sessions[token] = newUser.id;
   saveDatabase(db);
 
+  // Note: We do NOT issue an active session token here because email verification is mandatory!
   res.status(201).json({
-    token,
-    user: sanitizeUser(newUser),
+    success: true,
+    requiresVerification: true,
+    email: cleanEmail,
     verificationCode,
-    message: `Account created successfully! Verification code: ${verificationCode}`,
+    message: `Account created! We've sent a 6-digit verification code to ${cleanEmail}. Please verify your email to log in.`,
   });
 });
 
+// 2. Email Verification Route
 app.post('/api/auth/verify-email', (req: Request, res: Response) => {
   const { email, code } = req.body;
   if (!email || !code) {
@@ -275,13 +277,54 @@ app.post('/api/auth/verify-email', (req: Request, res: Response) => {
   if (user.verificationCode === cleanCode || cleanCode === '123456') {
     user.isVerified = true;
     user.verificationCode = undefined;
+
+    // Issue session token upon successful email verification
+    const token = 'token-' + crypto.randomUUID();
+    activeSessions.set(token, user.id);
+    if (!db.sessions) db.sessions = {};
+    db.sessions[token] = user.id;
+
     saveDatabase(db);
-    return res.json({ success: true, message: 'Email verified successfully! 🌺', user: sanitizeUser(user) });
+    return res.json({
+      success: true,
+      token,
+      message: 'Email verified successfully! Welcome to MyLocal Mate. 🌺',
+      user: sanitizeUser(user),
+    });
   }
 
   return res.status(400).json({ error: 'Invalid verification code. Please check and try again.' });
 });
 
+// 3. Resend Verification Code Route
+app.post('/api/auth/resend-verification', (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Email address is required.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
+  if (!user) {
+    return res.status(404).json({ error: 'Account not found for this email address.' });
+  }
+
+  if (user.isVerified) {
+    return res.status(400).json({ error: 'This email is already verified. You can sign in directly.' });
+  }
+
+  const newCode = String(Math.floor(100000 + Math.random() * 900000));
+  user.verificationCode = newCode;
+  saveDatabase(db);
+
+  res.json({
+    success: true,
+    verificationCode: newCode,
+    message: `A new 6-digit verification code has been dispatched to ${cleanEmail}.`,
+  });
+});
+
+// 4. Standard Email/Password Login (Blocks Unverified Accounts)
 app.post('/api/auth/login', (req: Request, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -299,6 +342,21 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
 
+  // MANDATORY EMAIL VERIFICATION CHECK FOR EMAIL/PASSWORD SIGNINS
+  if (user.isVerified === false) {
+    // Generate or refresh code if missing
+    if (!user.verificationCode) {
+      user.verificationCode = String(Math.floor(100000 + Math.random() * 900000));
+      saveDatabase(db);
+    }
+    return res.status(403).json({
+      error: 'Please verify your email address to sign in.',
+      unverified: true,
+      email: cleanEmail,
+      verificationCode: user.verificationCode,
+    });
+  }
+
   const token = 'token-' + crypto.randomUUID();
   activeSessions.set(token, user.id);
   if (!db.sessions) db.sessions = {};
@@ -308,6 +366,62 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
   res.json({
     token,
     user: sanitizeUser(user),
+  });
+});
+
+// 5. Google & Facebook Social Authentication (Bypasses Email Verification)
+app.post('/api/auth/social-login', (req: Request, res: Response) => {
+  const { provider, email, name, avatar } = req.body;
+  if (!provider || (provider !== 'google' && provider !== 'facebook')) {
+    return res.status(400).json({ error: 'Invalid social provider. Must be google or facebook.' });
+  }
+  if (!email) {
+    return res.status(400).json({ error: 'Social account email is required.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  let user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
+
+  if (user) {
+    // Social sign-ins from Google & Facebook are pre-verified!
+    user.isVerified = true;
+    if (avatar && (!user.avatar || user.avatar.includes('dicebear'))) {
+      user.avatar = avatar;
+    }
+    if (!user.authProvider) {
+      user.authProvider = provider;
+    }
+  } else {
+    // Create new user authenticated via social provider
+    const defaultAvatar = provider === 'google'
+      ? `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80`
+      : `https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80`;
+
+    user = {
+      id: 'user-' + crypto.randomUUID(),
+      name: name?.trim() || (provider === 'google' ? 'Google Traveler' : 'Facebook Explorer'),
+      email: cleanEmail,
+      avatar: avatar || defaultAvatar,
+      preferredLanguage: 'English',
+      travelInterests: ['Food & Street Stalls', 'Culture & Heritage', 'Public Transit'],
+      budgetPreference: 'Moderate',
+      createdAt: new Date().toISOString(),
+      isVerified: true, // Google and Facebook accounts are already verified by the identity provider
+      authProvider: provider,
+    };
+    db.users.push(user);
+  }
+
+  const token = 'token-' + crypto.randomUUID();
+  activeSessions.set(token, user.id);
+  if (!db.sessions) db.sessions = {};
+  db.sessions[token] = user.id;
+  saveDatabase(db);
+
+  res.json({
+    token,
+    user: sanitizeUser(user),
+    message: `Signed in successfully with ${provider === 'google' ? 'Google' : 'Facebook'}! 🌺`,
   });
 });
 

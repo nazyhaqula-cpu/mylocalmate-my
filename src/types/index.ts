@@ -9,6 +9,7 @@ export interface User {
   createdAt: string;
   isGuest?: boolean;
   isVerified?: boolean;
+  authProvider?: 'email' | 'google' | 'facebook' | 'guest';
 }
 
 export interface Destination {

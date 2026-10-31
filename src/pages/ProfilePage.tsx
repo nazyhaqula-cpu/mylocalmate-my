@@ -125,8 +125,12 @@ export const ProfilePage: React.FC = () => {
                   Guest Explorer
                 </span>
               ) : (
-                <span className="text-[10px] bg-[#e5f1dc] text-[#28583d] font-bold px-2 py-0.5 rounded-full">
-                  {user.isVerified ? 'Verified Member ✓' : 'Active Member'}
+                <span className="text-[10px] bg-[#e5f1dc] text-[#28583d] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 border border-[#cbe4c0]">
+                  {user.authProvider === 'google' && <span>Google Verified ✓</span>}
+                  {user.authProvider === 'facebook' && <span>Facebook Verified ✓</span>}
+                  {(!user.authProvider || user.authProvider === 'email') && (
+                    <span>{user.isVerified ? 'Email Verified ✓' : 'Unverified Member'}</span>
+                  )}
                 </span>
               )}
             </div>
