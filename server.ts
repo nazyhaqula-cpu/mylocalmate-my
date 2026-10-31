@@ -43,7 +43,10 @@ if (geminiApiKey && !geminiApiKey.includes('MY_GEMINI_API_KEY')) {
 // ----------------------------------------------------
 // Persistent Database Store (JSON file)
 // ----------------------------------------------------
-const DB_DIR = path.resolve(process.cwd(), 'data');
+const isVercel = Boolean(process.env.VERCEL);
+const DB_DIR = isVercel
+  ? path.resolve('/tmp', 'data')
+  : path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DB_DIR, 'db.json');
 
 interface DatabaseSchema {
@@ -62,8 +65,12 @@ interface DatabaseSchema {
 }
 
 function initDatabase(): DatabaseSchema {
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    }
+  } catch (err) {
+    console.warn('Could not initialize DB directory:', err);
   }
 
   // Always use latest authentic curated destinations to keep images fresh
@@ -1259,8 +1266,17 @@ Text: "${text}"`;
 });
 
 // ----------------------------------------------------
-// Public Phrases route
+// Public Phrases route & Health Check
 // ----------------------------------------------------
+app.get(['/api', '/api/health'], (_req: Request, res: Response) => {
+  res.json({
+    status: 'online',
+    name: 'MyLocal Mate API',
+    environment: isVercel ? 'vercel-serverless' : (isProduction ? 'production' : 'development'),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/api/phrases', (_req: Request, res: Response) => {
   res.json({ phrases: COMMON_PHRASES });
 });
@@ -1289,7 +1305,13 @@ async function startServer() {
   });
 }
 
-startServer().catch((err) => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+// In standard Node/container environments, start the listener.
+// In Vercel serverless functions, Vercel imports and invokes the exported app directly.
+if (!process.env.VERCEL) {
+  startServer().catch((err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+}
+
+export default app;
